@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разбор обращения · Лучи</title>
+<meta name="theme-color" content="#FF7377">
+<style>
+@font-face{font-family:'Cera Condensed';font-weight:900;font-display:swap;
+  src:url('assets/fonts/Cera%20Condensed-Black-Web.woff2') format('woff2');}
+@font-face{font-family:'Cera Condensed';font-weight:500;font-display:swap;
+  src:url('assets/fonts/Cera%20Condensed-Medium-Web.woff2') format('woff2');}
+@font-face{font-family:'Cera Condensed';font-weight:300;font-display:swap;
+  src:url('assets/fonts/Cera%20Condensed-Light-Web.woff2') format('woff2');}
+@font-face{font-family:'Styrene A';font-weight:400;font-display:swap;
+  src:url('assets/fonts/Styrene%20A-Regular-Web.woff2') format('woff2');}
+@font-face{font-family:'Styrene A';font-weight:500;font-display:swap;
+  src:url('assets/fonts/Styrene%20A-Medium-Web.woff2') format('woff2');}
+@font-face{font-family:'Styrene A';font-weight:300;font-display:swap;
+  src:url('assets/fonts/Styrene%20A-Light-Web.woff2') format('woff2');}
+
+:root{
+  --coral:#FF7377;--sky:#078EFF;--teal:#026B83;--ice:#71D7FF;
+  --sand:#EFEBCC;--ink:#022028;--white:#fff;
+  --font-display:'Cera Condensed','Arial Narrow',sans-serif;
+  --font-body:'Styrene A','Helvetica Neue',Arial,sans-serif;
+  --wrap:1260px;--gap:clamp(16px,3vw,36px);--radius:14px;--pill:100px;
+  --line:rgba(2,32,40,.12);
+  --line-soft:rgba(2,32,40,.07);
+  --muted:rgba(2,32,40,.52);
+  --shadow:0 1px 2px rgba(2,32,40,.05),0 8px 28px rgba(2,32,40,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);line-height:1.55;color:var(--ink);background:var(--white);
+  -webkit-font-smoothing:antialiased;font-size:15px}
+h1,h2,h3,.display{font-family:var(--font-display);font-weight:900;
+  text-transform:uppercase;letter-spacing:0;line-height:.9}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{color:var(--sky)}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gap)}
+.section-label{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.14em;font-size:12px;display:flex;gap:10px;align-items:center;color:var(--teal)}
+.section-label::before{content:"";width:24px;height:2px;background:currentColor}
+.ray{width:1em;height:1em;flex:none}
+.dim{color:rgba(2,32,40,.34)}
+
+/* ---------- Шапка ---------- */
+.topbar{position:sticky;top:0;z-index:60;background:var(--coral);
+  border-bottom:1px solid rgba(2,32,40,.16)}
+.topbar .row{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.brand{font-family:var(--font-display);font-weight:900;font-size:22px;letter-spacing:.02em;
+  color:var(--sand);text-decoration:none;display:flex;align-items:center;gap:8px;flex:none}
+.crumbs{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.06em;font-size:12px;color:var(--ink);min-width:0;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis}
+.crumbs .sep{color:var(--white)}
+.back{font-family:var(--font-display);font-weight:500;text-transform:uppercase;letter-spacing:.06em;
+  font-size:12px;color:var(--ink);border:1.5px solid rgba(2,32,40,.35);border-radius:var(--pill);
+  padding:7px 14px;display:none;align-items:center;gap:7px;transition:.18s;flex:none}
+.back:hover{background:var(--ink);color:var(--sand);border-color:var(--ink)}
+body[data-screen="case"] .back{display:inline-flex}
+
+/* ---------- Экран 1: меню ---------- */
+.hero{background:var(--sand);padding:clamp(34px,6vw,68px) 0 clamp(30px,5vw,54px);
+  position:relative;overflow:hidden}
+.hero .ray-bg{position:absolute;right:-40px;top:-40px;width:min(320px,36vw);height:auto;
+  color:var(--coral);opacity:.16;pointer-events:none}
+.hero .kicker{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.18em;font-size:12px;color:var(--teal);margin-bottom:14px}
+.hero h1{font-size:clamp(40px,7.5vw,84px);color:var(--coral);max-width:16ch}
+.howto{margin-top:26px;background:var(--white);border-radius:var(--radius);
+  padding:22px 24px;max-width:760px;border:1px solid rgba(2,32,40,.09)}
+.howto .ttl{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
+  font-size:15px;letter-spacing:.02em;display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.howto ol{list-style:none;display:flex;flex-direction:column;gap:9px}
+.howto li{display:flex;gap:12px;align-items:flex-start;font-size:15px}
+.howto li .n{font-family:var(--font-display);font-weight:900;font-size:15px;color:var(--coral);
+  min-width:20px;line-height:1.5}
+.howto li:nth-child(even) .n{color:var(--teal)}
+.howto .final{margin-top:15px;padding-top:14px;border-top:1px solid var(--line-soft);
+  display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.howto .final .ray{color:var(--coral);margin-top:4px}
+.howto .final b{font-weight:500}
+
+.cases{padding:clamp(32px,5vw,56px) 0 clamp(48px,7vw,88px)}
+.cases-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(300px,440px));margin-top:22px}
+.case{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px;text-align:left;display:flex;flex-direction:column;gap:12px;min-height:225px;
+  transition:.2s;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.case:hover{transform:translateY(-3px);border-color:var(--coral);
+  box-shadow:0 2px 4px rgba(2,32,40,.05),0 16px 40px rgba(255,115,119,.18)}
+.case .num{font-family:var(--font-display);font-weight:900;font-size:15px;color:var(--coral);
+  letter-spacing:.08em}
+.case h3{font-family:var(--font-body);font-weight:500;text-transform:none;font-size:21px;line-height:1.25}
+.case p{color:var(--muted);font-size:14px}
+.case .tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto}
+.chip{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.05em;font-size:11px;line-height:1;padding:7px 11px;border-radius:var(--pill);
+  border:1.5px solid rgba(2,32,40,.2);color:var(--teal)}
+.case .go{font-family:var(--font-display);font-weight:900;text-transform:uppercase;font-size:14px;
+  letter-spacing:.03em;color:var(--coral);display:flex;align-items:center;gap:8px;margin-top:4px}
+.case .go span{transition:transform .2s}
+.case:hover .go span{transform:translateX(4px)}
+
+/* ---------- Экран 2 ---------- */
+.case-view{padding:22px 0 70px;background:rgba(239,235,204,.28);min-height:calc(100vh - 60px)}
+.crmtabs{display:flex;align-items:flex-end;gap:4px;border-bottom:1px solid var(--line);
+  margin-bottom:20px;flex-wrap:wrap}
+.crmtab{display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:10px 10px 0 0;
+  font-family:var(--font-display);font-weight:500;text-transform:uppercase;letter-spacing:.05em;
+  font-size:12px;color:var(--muted);border:1px solid transparent;border-bottom:none;transition:.18s;
+  margin-bottom:-1px;max-width:100%}
+.crmtab:hover{color:var(--ink);background:rgba(255,255,255,.7)}
+.crmtab.is-active{background:var(--white);border-color:var(--line);color:var(--ink);
+  box-shadow:0 -2px 0 var(--coral) inset}
+.crmtab .dot{width:7px;height:7px;border-radius:50%;background:var(--coral);flex:none}
+.panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden}
+.stack{display:flex;flex-direction:column;gap:18px}
+
+/* ---------- Карточка CRM ---------- */
+.crm-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:16px 24px 14px;border-bottom:1px solid var(--line-soft)}
+.crm-name{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
+  font-size:25px;line-height:1;background:var(--sand);padding:5px 12px;border-radius:8px;
+  display:flex;align-items:baseline;gap:10px}
+.crm-name .id{color:var(--muted);font-size:19px}
+.crm-actions{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap}
+.crm-actions .lnk{font-size:13.5px;color:var(--sky);padding:0 14px;border-right:1px solid var(--line);
+  cursor:default;white-space:nowrap}
+.crm-actions .lnk:last-of-type{border-right:none}
+.crm-alerts{padding:0 24px 14px;display:flex;flex-wrap:wrap;gap:8px 18px;
+  font-size:13.5px;color:var(--coral)}
+.crm-alerts span{display:flex;align-items:center;gap:8px}
+.crm-alerts span + span::before{content:"•";color:var(--coral)}
+.crm-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;padding:18px 24px 22px}
+@media(max-width:900px){.crm-cols{grid-template-columns:1fr}}
+.crm-row{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:14px;
+  align-items:start;padding:7px 0}
+.crm-row > .l{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.09em;font-size:11px;color:var(--muted);padding-top:3px}
+.crm-row > .r{font-size:14.5px;min-width:0}
+.pill-dark{display:inline-block;font-family:var(--font-display);font-weight:500;
+  text-transform:uppercase;letter-spacing:.06em;font-size:11px;line-height:1;
+  background:var(--ink);color:var(--sand);border-radius:6px;padding:6px 10px}
+.copy{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;
+  color:var(--muted);vertical-align:-4px;margin-left:6px;transition:.15s;cursor:default}
+.copy:hover{background:rgba(2,32,40,.08);color:var(--ink)}
+.copy svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.6}
+.acc{width:100%;text-align:left;display:flex;align-items:center;gap:9px;color:var(--sky);
+  font-size:14.5px;padding:6px 0}
+.acc .chev{transition:transform .2s;font-size:12px}
+.acc.is-open .chev{transform:rotate(180deg)}
+.acc-body{padding:2px 0 8px 0;font-size:14px;color:var(--muted)}
+.acc-body ol{list-style:none;display:flex;flex-direction:column;gap:4px}
+.prog-sec{border-top:1px solid var(--line-soft);background:rgba(239,235,204,.22)}
+.prog-head{display:flex;align-items:center;gap:10px;padding:16px 24px;width:100%;text-align:left;
+  font-family:var(--font-display);font-weight:900;text-transform:uppercase;font-size:17px}
+.prog-head .chev{font-size:13px;color:var(--coral);transition:transform .2s}
+.prog-head.is-open .chev{transform:rotate(180deg)}
+.prog-body{padding:0 24px 22px}
+.svcicons{display:flex;gap:8px;flex-wrap:wrap}
+.svc{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(2,32,40,.05);color:rgba(2,32,40,.24);position:relative}
+.svc svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.svc.on{background:var(--sand);color:var(--coral);box-shadow:inset 0 0 0 1.5px rgba(255,115,119,.45)}
+.svc::after{content:attr(data-t);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);background:var(--ink);color:var(--white);font-size:11px;
+  padding:5px 9px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:.16s;z-index:5}
+.svc:hover::after{opacity:1}
+.demo-note{padding:12px 24px 18px;font-size:12.5px;color:var(--muted);
+  display:flex;gap:9px;align-items:flex-start;border-top:1px solid var(--line-soft)}
+.demo-note .ray{color:var(--coral);margin-top:3px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:var(--font-display);font-weight:900;text-transform:uppercase;letter-spacing:.03em;
+  font-size:13px;padding:10px 18px;border-radius:var(--pill);
+  background:var(--coral);color:var(--white);border:2px solid var(--coral);transition:.2s}
+.btn:hover{background:var(--ink);border-color:var(--ink);color:var(--sand)}
+.btn--ghost{background:transparent;color:var(--coral)}
+.btn--ghost:hover{background:var(--coral);color:var(--white);border-color:var(--coral)}
+
+/* ---------- Чат / лог ---------- */
+.chat-head{display:flex;align-items:center;gap:13px;padding:13px 20px;border-bottom:1px solid var(--line-soft)}
+.ava{width:40px;height:40px;border-radius:50%;background:var(--coral);color:var(--white);
+  display:grid;place-items:center;font-family:var(--font-display);font-weight:900;font-size:17px;flex:none}
+.chat-head .who{font-family:var(--font-body);font-weight:500;font-size:16px;line-height:1.2}
+.chat-head .sub{font-size:12.5px;color:var(--muted)}
+.chat-head .status{margin-left:auto;font-family:var(--font-display);font-weight:500;
+  text-transform:uppercase;letter-spacing:.07em;font-size:10.5px;color:var(--teal);
+  border:1.5px solid rgba(2,107,131,.35);border-radius:var(--pill);padding:6px 11px;flex:none}
+.chat-body{position:relative}
+.chat-scroll{height:min(58vh,540px);overflow-y:auto;padding:22px 20px 56px;
+  background:rgba(239,235,204,.24)}
+.chat-scroll::-webkit-scrollbar{width:9px}
+.chat-scroll::-webkit-scrollbar-thumb{background:rgba(2,32,40,.18);border-radius:9px}
+.chat-scroll::-webkit-scrollbar-track{background:transparent}
+.daysep{display:flex;align-items:center;gap:12px;margin:4px 0 18px;color:var(--muted)}
+.daysep::before,.daysep::after{content:"";height:1px;background:var(--line);flex:1}
+.daysep span{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.12em;font-size:11px}
+.appealsep{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--teal)}
+.appealsep::before,.appealsep::after{content:"";height:1px;background:rgba(2,107,131,.25);flex:1}
+.appealsep span{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.1em;font-size:11px;white-space:nowrap}
+.syslog{display:flex;justify-content:center;margin:8px 0}
+.syslog .p{font-size:11.5px;color:var(--muted);background:rgba(2,32,40,.05);
+  border:1px solid var(--line-soft);border-radius:10px;padding:8px 14px;text-align:center;
+  max-width:min(84%,560px);line-height:1.45}
+.syslog .p b{font-weight:500;color:var(--teal)}
+.syslog .p i{display:block;font-style:normal;color:rgba(2,32,40,.4);margin-top:3px;font-size:10.5px}
+.msg{display:flex;margin-bottom:10px;animation:pop .3s ease both}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.out,.msg.bot{justify-content:flex-end}
+.msg.tight{margin-top:-4px}
+.bubble{max-width:min(76%,600px);border-radius:16px;padding:12px 15px 9px;
+  font-size:14.5px;line-height:1.5;white-space:pre-line}
+.msg.in .bubble{background:var(--white);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg.out .bubble{background:rgba(255,115,119,.16);border:1px solid rgba(255,115,119,.34);
+  border-bottom-right-radius:5px}
+.msg.bot .bubble{background:var(--sand);border:1px solid rgba(2,32,40,.13);border-bottom-right-radius:5px}
+.bubble .name{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.08em;font-size:10.5px;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.msg.in .bubble .name{color:var(--teal)}
+.msg.out .bubble .name{color:var(--coral)}
+.msg.bot .bubble .name{color:var(--teal)}
+.bubble .name .bt{border:1px solid currentColor;border-radius:var(--pill);padding:1px 6px;
+  font-size:9px;letter-spacing:.06em}
+.bubble .meta{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:6px;
+  font-size:11px;color:var(--muted)}
+.scrollhint{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;z-index:5;
+  background:var(--ink);color:var(--sand);border-radius:var(--pill);padding:9px 16px;
+  font-family:var(--font-display);font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  font-size:11px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(2,32,40,.25);
+  transition:opacity .3s,transform .3s;pointer-events:none}
+.scrollhint.is-hidden{opacity:0;transform:translate(-50%,10px)}
+.chat-foot{padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:center;
+  gap:10px;color:var(--muted);font-size:13px;background:var(--white)}
+.chat-foot .fake-input{flex:1;border:1px solid var(--line);border-radius:var(--pill);padding:9px 15px;
+  color:rgba(2,32,40,.38);background:rgba(239,235,204,.3);font-size:13.5px}
+.chat-foot .send{width:36px;height:36px;border-radius:50%;background:rgba(255,115,119,.25);
+  display:grid;place-items:center;color:var(--coral);flex:none}
+
+.note-closed{display:flex;gap:13px;align-items:flex-start;background:var(--white);
+  border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:var(--radius);
+  padding:16px 20px;box-shadow:var(--shadow)}
+.note-closed .ic{width:34px;height:34px;border-radius:50%;background:rgba(2,107,131,.12);
+  color:var(--teal);display:grid;place-items:center;flex:none;margin-top:1px}
+.note-closed .ic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.note-closed .t{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
+  font-size:14px;letter-spacing:.02em;margin-bottom:4px}
+.note-closed p{font-size:14px;color:var(--muted)}
+
+/* ---------- Нижние вкладки ---------- */
+.infoblock .capt{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
+  font-size:19px;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.infoblock .capt .ray{color:var(--coral)}
+.tabstrip{display:flex;gap:6px;flex-wrap:wrap;padding:6px;background:var(--white);
+  border:1px solid var(--line);border-radius:var(--pill);box-shadow:var(--shadow)}
+.tabstrip button{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.06em;font-size:12px;padding:10px 18px;border-radius:var(--pill);
+  color:var(--muted);transition:.18s;white-space:nowrap}
+.tabstrip button:hover{color:var(--ink);background:rgba(239,235,204,.55)}
+.tabstrip button.is-active{background:var(--coral);color:var(--white)}
+.tabbody{margin-top:14px;background:var(--white);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,26px);min-height:200px}
+.tabpane{animation:fade .28s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:11px;padding:30px 20px;color:var(--muted)}
+.empty .ic{width:60px;height:60px;border-radius:50%;background:var(--sand);color:var(--coral);
+  display:grid;place-items:center}
+.empty .ic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.empty h4{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
+  font-size:18px;color:var(--ink)}
+.empty p{max-width:42ch;font-size:14px}
+
+/* ---------- Таблицы CRM ---------- */
+.tbl-wrap{overflow-x:auto}
+.tbl-wrap::-webkit-scrollbar{height:9px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:rgba(2,32,40,.18);border-radius:9px}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:920px}
+.tbl th{text-align:left;font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.09em;font-size:10.5px;color:var(--muted);padding:0 16px 11px 0;
+  border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:bottom}
+.tbl td{padding:13px 16px 13px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+.tbl tbody tr:hover td{background:rgba(239,235,204,.4)}
+.tbl .num{color:var(--sky);white-space:nowrap}
+.tbl .dt{white-space:nowrap}
+.tbl .dt i{display:block;font-style:normal;color:var(--muted);font-size:12.5px;margin-top:1px}
+.st{font-weight:500;white-space:nowrap}
+.st.ok{color:var(--teal)}
+.st.no{color:var(--coral)}
+.st.mut{color:var(--muted)}
+.svc-list{display:flex;flex-direction:column;gap:5px;min-width:260px}
+.svc-item{display:flex;gap:9px;align-items:flex-start;line-height:1.35}
+.svc-item .mk{width:15px;height:15px;flex:none;margin-top:2px}
+.svc-item .mk svg{width:15px;height:15px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.svc-item.yes .mk{color:var(--teal)}
+.tbl .rownum{color:var(--sky);text-decoration:underline;text-underline-offset:3px;
+  cursor:pointer;white-space:nowrap;font:inherit}
+.tbl .rownum:hover{color:var(--coral)}
+.desc-tt{cursor:default;border-bottom:1px dashed rgba(2,32,40,.3)}
+.old-val{color:rgba(2,32,40,.4);text-decoration:line-through;text-decoration-color:rgba(255,115,119,.6)}
+.new-val{color:var(--ink);font-weight:500}
+
+/* ---------- Всплывающая подсказка (описание обращения) ---------- */
+#ttBox{position:fixed;z-index:120;max-width:320px;background:var(--ink);color:var(--sand);
+  font-size:13px;line-height:1.5;padding:12px 14px;border-radius:10px;
+  box-shadow:0 14px 34px rgba(2,32,40,.35);opacity:0;pointer-events:none;transition:opacity .12s}
+#ttBox.is-show{opacity:1}
+
+/* ---------- Модалка ---------- */
+.overlay{position:fixed;inset:0;z-index:90;background:rgba(2,32,40,.45);
+  display:grid;place-items:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+.overlay.is-open{opacity:1;pointer-events:auto}
+.modal{background:var(--white);border-radius:18px;width:min(880px,100%);max-height:88vh;overflow:auto;
+  box-shadow:0 24px 70px rgba(2,32,40,.35);transform:translateY(12px) scale(.99);transition:transform .25s}
+.overlay.is-open .modal{transform:none}
+.modal--wide{width:min(1000px,100%)}
+.modal-head{display:flex;align-items:center;gap:12px;padding:20px 24px 16px;
+  border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:var(--white);z-index:2}
+.modal-head .mark{width:30px;height:30px;border-radius:50%;background:var(--sand);color:var(--coral);
+  display:grid;place-items:center;flex:none}
+.modal-head h3{font-family:var(--font-body);font-weight:500;text-transform:none;font-size:19px;line-height:1.2}
+.modal-head .close{margin-left:auto;width:34px;height:34px;border-radius:50%;display:grid;
+  place-items:center;color:var(--muted);transition:.16s;font-size:20px;line-height:1;flex:none}
+.modal-head .close:hover{background:rgba(2,32,40,.08);color:var(--ink)}
+.modal-body{padding:22px 24px 28px}
+.fieldgrid{display:grid;gap:20px 26px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.fieldgrid .k{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.1em;font-size:10.5px;color:var(--muted);margin-bottom:5px}
+.fieldgrid .v{font-size:14.5px;font-weight:500}
+.hr{height:1px;background:var(--line-soft);margin:22px 0}
+.footnote{margin-top:26px;font-size:12.5px;color:var(--muted);display:flex;gap:9px;align-items:flex-start}
+.footnote .ray{color:var(--coral);margin-top:3px}
+
+.selfield{border:1px solid var(--line);border-radius:9px;padding:11px 14px;background:var(--white);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14.5px}
+.selfield .chev{color:var(--muted);font-size:12px;flex:none}
+.apptgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+@media(max-width:700px){.apptgrid{grid-template-columns:1fr}}
+.apptgrid .l{font-family:var(--font-display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.09em;font-size:11px;color:var(--muted);margin-bottom:6px}
+.subttl{font-family:var(--font-display);font-weight:900;text-transform:uppercase;font-size:16px;
+  margin:24px 0 12px;display:flex;align-items:center;gap:9px}
+.note-box{background:rgba(239,235,204,.4);border:1px solid var(--line-soft);border-radius:10px;
+  padding:12px 15px;font-size:14.5px}
+.commentbox{border:1px solid var(--line);border-radius:10px;min-height:56px;padding:12px 14px;
+  color:rgba(2,32,40,.32);font-size:14px;background:rgba(239,235,204,.15)}
+</style>
+</head>
+<body data-screen="menu">
+
+<svg style="display:none">
+  <symbol id="ray" viewBox="0 0 32 32">
+    <path d="M17.3614 10.1152L16.9537 1H15.0418L14.6341 10.1152L13.6492 10.4564L7.96936 3.31314L6.40294 4.46971L11.4026 12.0207C12.9411 14.3338 17.4987 13.0077 17.3614 10.1152Z"/>
+    <path d="M22.0221 15.4904L30.5258 12.2932L29.9464 10.4564L21.2045 12.9048L20.5608 12.0464L25.5561 4.40105L24.0541 3.31315L18.3742 10.4221C16.7156 12.5314 19.2669 16.544 22.0221 15.4904Z"/>
+    <path d="M11.4434 20.0136L6.37727 27.5646L7.94154 28.7212L13.6214 21.5779L14.6406 21.9169L15.0483 31H16.9538L17.3615 21.9169C17.4988 18.9923 13.042 17.5975 11.4434 20.0136Z"/>
+    <path d="M10.7975 12.9047L2.02345 10.4564L1.44409 12.2932L9.98212 15.4904L9.94779 16.5439L1.44409 19.7068L2.02345 21.5436L10.8318 19.1296C13.6214 18.3807 13.587 13.6879 10.7975 12.9047Z"/>
+    <path d="M18.3829 21.6123L24.0627 28.6934L25.627 27.5368L20.5587 19.9858L21.2024 19.1275L29.9786 21.5415L30.5558 19.7047L22.02 16.5419C19.2669 15.5248 16.5439 19.2949 18.3829 21.6123Z"/>
+  </symbol>
+</svg>
+
+<header class="topbar">
+  <div class="wrap row">
+    <a class="brand" href="#" onclick="goMenu();return false">
+      <svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>ЛУЧИ
+    </a>
+    <nav class="crumbs">Обучение <span class="sep">·</span> <span id="crumb">Разбор обращения</span></nav>
+    <button class="back" onclick="goMenu()">← К списку</button>
+  </div>
+</header>
+
+<!-- ================= ЭКРАН 1 — МЕНЮ ================= -->
+<main id="screen-menu">
+  <section class="hero">
+    <svg class="ray-bg" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>
+    <div class="wrap">
+      <p class="kicker">Демонстрационная среда · только просмотр</p>
+      <h1>Разбор<br>обращения</h1>
+      <div class="howto">
+        <div class="ttl">
+          <svg class="ray" viewBox="0 0 32 32" style="fill:currentColor;color:var(--coral)"><use href="#ray"/></svg>
+          Инструкция
+        </div>
+        <ol>
+          <li><span class="n">1</span><span>Откройте обращение.</span></li>
+          <li><span class="n">2</span><span>Изучите карточку и историю переписки.</span></li>
+          <li><span class="n">3</span><span>Просмотрите вкладки с информацией о пациенте.</span></li>
+          <li><span class="n">4</span><span>Ничего вводить не нужно.</span></li>
+        </ol>
+        <div class="final">
+          <svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>
+          <span>Ответ напишите в <b>Яндекс Форме</b>.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cases">
+    <div class="wrap">
+      <p class="section-label">Выберите обращение</p>
+      <div class="cases-grid">
+        <button class="case" onclick="openCase(3)">
+          <span class="num">ОБРАЩЕНИЕ 1</span>
+          <h3>Обращение с острой болью</h3>
+          <p>Пациентка обращается с острой болью.</p>
+          <div class="tags">
+            <span class="chip">Острая боль</span>
+            <span class="chip">Стоматология</span>
+            <span class="chip">ДМС</span>
+          </div>
+          <span class="go">Открыть <span>→</span></span>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= ЭКРАН 2 — КЕЙС ================= -->
+<main id="screen-case" hidden>
+  <div class="case-view">
+    <div class="wrap">
+
+      <div id="case-3" hidden>
+        <div class="crmtabs">
+          <button class="crmtab is-active" data-pane="pane-3-main" onclick="showPane(3,'pane-3-main',this)">
+            <span class="dot"></span>Обращение № 9401052 · Полина
+          </button>
+        </div>
+
+        <section class="pane stack" id="pane-3-main">
+
+          <div class="panel" id="card-polina"></div>
+
+          <div class="panel">
+            <div class="chat-head">
+              <div class="ava">П</div>
+              <div>
+                <div class="who">Полина</div>
+                <div class="sub">Чат в приложении · обращение № 9401052</div>
+              </div>
+              <div class="status">Обращение завершено</div>
+            </div>
+            <div class="chat-body">
+              <div class="chat-scroll" id="chat3">
+
+                <div class="daysep"><span>4 июня</span></div>
+
+                <div class="syslog"><div class="p"><b>Автосообщение.</b> Доступно: Комплексная профессиональная гигиена (включая покрытие фторлаком, ультразвуковую чистку, Air-Flow).<i>4 июн. 18:05</i></div></div>
+
+                <div class="syslog"><div class="p"><b>Автосообщение.</b> Благодарим вас за использование сервиса «Лучи». Оцените качество работы нашей службы поддержки.<i>4 июн. 21:50</i></div></div>
+
+                <div class="daysep"><span>3 июля</span></div>
+
+                <div class="syslog"><div class="p"><b>Chat assigned to Оператор — Диана Р.</b><i>Reason — API/script · 3 июл. 13:05</i></div></div>
+
+                <div class="msg out"><div class="bubble">
+                  <span class="name">Оператор</span>Здравствуйте, Полина! Уточните, пожалуйста, удобный район для посещения клиники. Какие даты и временные интервалы рассматриваете для записи?
+                  <div class="meta">13:22 <span class="tick">✓✓</span></div>
+                </div></div>
+
+                <div class="daysep"><span>4 июля</span></div>
+
+                <div class="syslog"><div class="p"><b>Chat assigned to Администратор</b><i>Reason — API/script · 4 июл. 02:32</i></div></div>
+                <div class="syslog"><div class="p"><b>Chat closed.</b> Initiator — Администратор.<i>4 июл. 02:35</i></div></div>
+
+              </div>
+              <div class="scrollhint" id="hint3">↑ Прокрутите вверх — с начала обращения</div>
+            </div>
+            <div class="chat-foot">
+              <div class="fake-input">Поле ввода недоступно — режим просмотра</div>
+              <div class="send">➤</div>
+            </div>
+          </div>
+
+          <div class="infoblock">
+            <div class="capt"><svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>Информация о пациенте</div>
+            <div class="tabstrip">
+              <button class="is-active" onclick="showTab('3a',0,this)">История обращений</button>
+              <button onclick="showTab('3a',1,this)">Записи</button>
+              <button onclick="showTab('3a',2,this)">Гарантийные письма</button>
+              <button onclick="showTab('3a',3,this)">Согласования</button>
+              <button onclick="showTab('3a',4,this)">История изменений</button>
+              <button onclick="showTab('3a',5,this)">Комментарии</button>
+              <button onclick="showTab('3a',6,this)">Телемед консультации</button>
+            </div>
+            <div class="tabbody" id="tabs-3a">
+              <div class="tabpane"></div><div class="tabpane" hidden></div><div class="tabpane" hidden></div>
+              <div class="tabpane" hidden></div><div class="tabpane" hidden></div><div class="tabpane" hidden></div>
+              <div class="tabpane" hidden></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div id="ttBox"></div>
+
+<!-- ================= МОДАЛКА: ОБРАЩЕНИЕ / СОЗДАНИЕ ЗАПИСИ ================= -->
+<div class="overlay" id="apptOverlay" onclick="if(event.target===this)closeAppt()">
+  <div class="modal modal--wide" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <span class="mark"><svg class="ray" viewBox="0 0 32 32" style="width:16px;height:16px;fill:currentColor"><use href="#ray"/></svg></span>
+      <h3>Обращение · Создание записи</h3>
+      <button class="close" onclick="closeAppt()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="modal-body" id="apptBody"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1. ИКОНКИ
+   ========================================================= */
+const SVC = [
+  {k:'amb',  t:'Амбулаторно-поликлиническая помощь', d:'<path d="M11 2v6a3 3 0 0 1-6 0V2"/><path d="M5 2h1M10 2h1"/><path d="M8 11v3a5 5 0 0 0 10 0v-1"/><circle cx="18" cy="11" r="2"/>'},
+  {k:'stom', t:'Стоматология', d:'<path d="M12 5.5c-1.5-1.2-3-1.8-4.4-1.3C5.7 4.9 5 6.7 5 8.6c0 2.6.7 4.2 1.4 6.6.5 1.8.6 4.3 2 4.3 1.2 0 1.3-2.2 1.8-3.8.3-1 .8-1.7 1.8-1.7s1.5.7 1.8 1.7c.5 1.6.6 3.8 1.8 3.8 1.4 0 1.5-2.5 2-4.3.7-2.4 1.4-4 1.4-6.6 0-1.9-.7-3.7-2.6-4.4-1.4-.5-2.9.1-4.4 1.3Z"/>'},
+  {k:'home', t:'Помощь на дому', d:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/><path d="M10 21v-6h4v6"/>'},
+  {k:'amb2', t:'Скорая помощь', d:'<path d="M2 16V8h11v8"/><path d="M13 10h4l4 3.5V16h-2"/><circle cx="7" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/><path d="M6.5 12h3M8 10.5v3"/>'},
+  {k:'plan', t:'Плановая госпитализация', d:'<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>'},
+  {k:'urg',  t:'Экстренная госпитализация', d:'<path d="M6 21V9l6-6 6 6v12"/><path d="M10 12h4M12 10v4"/><path d="M4 21h16"/>'},
+  {k:'tele', t:'Телемедицина', d:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/>'}
+];
+function svcRow(active){
+  return '<div class="svcicons">' + SVC.map(s =>
+    '<span class="svc '+(active.includes(s.k)?'on':'')+'" data-t="'+s.t+'"><svg viewBox="0 0 24 24">'+s.d+'</svg></span>'
+  ).join('') + '</div>';
+}
+const COPY = '<span class="copy" title="Скопировать"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span>';
+const MK_YES = '<svg viewBox="0 0 24 24" stroke="currentColor" fill="none"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.3 3 3 6-6.6"/></svg>';
+function dash(){ return '<span class="dim">-</span>'; }
+
+/* =========================================================
+   2. ДАННЫЕ ПАЦИЕНТА (демонстрационные, вымышленные)
+   ========================================================= */
+const ADDONS_POLINA = ['Горячая линия психологической помощи БД','Юридическая поддержка «Правокард»'];
+const PROGRAMS_POLINA = [
+  'Роуминг ДМС (для коллективов от 101 чел) (Стандарт Москва)',
+  'Страхование от несчастных случаев (СС 100 000 руб/смерть и инвалидность I и II группы / бонус к ДМС) (Стандарт Москва)',
+  'Ветеринар BestDoctor (безлимит) для коллектива от 51 чел (Стандарт Москва)',
+  'ВК — базовые специальности (Стандарт Москва)',
+  'ВК — Психолог горячая линия (безлимит) (Стандарт Москва)',
+  'Ведение хронических заболеваний (Вектор здоровья) (Стандарт Москва)',
+  'ВК — Узкие специальности (лимит 1) Бонус (Стандарт Москва)'
+];
+
+const PEOPLE = {
+  polina:{
+    name:'Ковалёва Полина Викторовна', id:'402951',
+    alerts:['Не прошёл регистрацию','Нет банковской карты'],
+    tags:'<span class="dim">-</span>',
+    phone:'+7 926 440-17-52',
+    address:'Москва, ул. Полярная, д. 8, кв. 21',
+    comment:'—',
+    relative:null,
+    email:'p.kovaleva@example.com',
+    birth:'03.11.1999 (26 лет)',
+    passport:'5521',
+    vzr:{text:'Есть действующий полис', ok:true},
+    program:{
+      title:'(B2B ДМС) Стандарт Москва',
+      policy:'trk-4471-svm09', company:'Вектор Логистик',
+      programName:'Стандарт Москва',
+      programLink:'https://media.luchi.ru/72f8e4c7349dcd54c2556ff637819a50131d5b4d8653a6c66bbe999551e789b2/АЛЬФАМЕД.pdf',
+      period:'с 01.02.2026 по 31.01.2027', city:'Москва',
+      comment:'аккаунт — Мария Волкова',
+      services:['amb','stom','home','plan','tele']
+    }
+  }
+};
+
+/* =========================================================
+   3. РЕНДЕР КАРТОЧКИ
+   ========================================================= */
+function row(label, value){
+  return '<div class="crm-row"><div class="l">'+label+'</div><div class="r">'+value+'</div></div>';
+}
+function renderCard(key){
+  const p = PEOPLE[key], pr = p.program;
+  const progVal = pr.programLink
+    ? '<a href="'+pr.programLink+'" target="_blank" rel="noopener">'+pr.programName+'</a>'
+    : pr.programName;
+
+  return ''+
+  '<div class="crm-head">'+
+    '<div class="crm-name">'+p.name+'<span class="id">'+p.id+'</span></div>'+
+    '<div class="crm-actions">'+
+      '<span class="lnk">Чат в мобиле</span><span class="lnk">Создать обращение</span>'+
+      '<span class="lnk">Медкарта</span><span class="lnk">Карточка</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="crm-alerts">'+ p.alerts.map(a=>'<span>'+a+'</span>').join('') +'</div>'+
+  '<div class="crm-cols">'+
+    '<div>'+
+      row('Приоритет','<span class="pill-dark">Обычный</span>')+
+      row('Теги', p.tags)+
+      row('Телефон','<span>'+p.phone+'</span>'+COPY)+
+      row('Адрес факт. прож.','<span>'+p.address+'</span>'+COPY)+
+      row('Комментарий к пациенту', p.comment === '—'
+          ? '<span class="dim">—</span>' : p.comment)+
+    '</div>'+
+    '<div>'+
+      row('Почта пациента','<span>'+p.email+'</span>'+COPY)+
+      row('Дата рождения','<span style="font-weight:500">'+p.birth+'</span>')+
+      row('Последние 4 цифры паспорта', p.passport)+
+      row('Полис ВЗР', p.vzr.ok
+          ? '<span style="color:var(--sky)">'+p.vzr.text+'</span>'
+          : '<span style="color:var(--coral)">'+p.vzr.text+'</span>')+
+      '<button class="acc" onclick="toggleAcc(this)">Доп. продукты <span class="chev">⌄</span></button>'+
+      '<div class="acc-body" hidden><ol>'+ADDONS_POLINA.map((t,i)=>'<li>'+(i+1)+'. '+t+'</li>').join('')+'</ol></div>'+
+      '<button class="acc" onclick="toggleAcc(this)">Программы-опции <span class="chev">⌄</span></button>'+
+      '<div class="acc-body" hidden><ol>'+PROGRAMS_POLINA.map((t,i)=>'<li>'+(i+1)+'. '+t+'</li>').join('')+'</ol></div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="prog-sec">'+
+    '<button class="prog-head is-open" onclick="toggleAcc(this)">'+pr.title+' <span class="chev">⌄</span></button>'+
+    '<div class="prog-body">'+
+      '<div class="crm-cols" style="padding:0;gap:0 40px">'+
+        '<div>'+
+          row('Фронтёр','СеверСтрахование')+
+          row('Номер полиса фронтёра', pr.policy)+
+          row('Компания', pr.company)+
+          row('Должность','<span class="dim">-</span>')+
+          row('Аккаунт','i.orlova')+
+          row('Врач куратор','<span class="dim">-</span>')+
+          row('Комментарий к программе', '<span style="color:var(--coral)">'+pr.comment+'</span>')+
+        '</div>'+
+        '<div>'+
+          row('Тип договора','Фронтированный рисковый')+
+          row('Период обслуживания пациента', pr.period)+
+          row('Обслуживается','По спискам')+
+          row('Программа', progVal)+
+          row('Город', pr.city)+
+          row('Что входит в программу', svcRow(pr.services))+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="demo-note">'+
+    '<svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>'+
+    '<span>Демонстрационные данные. Персональные сведения вымышленные, карточка показана в учебных целях.</span>'+
+  '</div>';
+}
+document.getElementById('card-polina').innerHTML = renderCard('polina');
+
+function toggleAcc(btn){
+  btn.classList.toggle('is-open');
+  const body = btn.nextElementSibling;
+  body.hidden = !body.hidden;
+}
+
+/* =========================================================
+   4. ДАННЫЕ ВКЛАДОК
+   ========================================================= */
+const CL1 = 'Клиника «Гармония+» на Тверской';
+const CL2 = 'Клиника «СеверМед» на Сокольниках';
+const VIRT = 'Виртуальная клиника';
+
+function svcList(items){
+  return '<div class="svc-list">' + items.map(it =>
+    '<div class="svc-item yes"><span class="mk">'+MK_YES+'</span><span>'+it+'</span></div>'
+  ).join('') + '</div>';
+}
+
+/* --- История обращений --- */
+const OBR = [
+  {n:'9401052', c:'03.07.2026', ct:'12:40', tema:'Создать запись', st:'Завершено', desc:'вижу соглас чистку, скрипты', own:'a.orlova', det:1},
+  {n:'9398760', c:'01.07.2026', ct:'07:38', tema:'Создать запись', st:'Завершено',
+    desc:'Здравствуйте, запишите…',
+    full:'Здравствуйте, запишите меня на приём: 1. Специальность: Стоматолог-терапевт 2. Дата и время: 3 июля, 10:10 3. ФИО врача: Ковальчук Анна Сергеевна 4. Клиника, удобный адрес: '+CL1,
+    own:''},
+  {n:'9210458', c:'04.06.2026', ct:'18:58', tema:'Создать согласование', st:'Завершено', desc:'', own:'a.orlova'},
+  {n:'9180125', c:'25.05.2026', ct:'11:16', tema:'Создать запись', st:'Завершено', desc:'Здравствуйте, запишите…', own:''},
+  {n:'9175002', c:'18.05.2026', ct:'18:42', tema:'Создать согласование', st:'Завершено', desc:'', own:'m.volkova'},
+  {n:'9160071', c:'17.05.2026', ct:'09:24', tema:'Создать запись', st:'Завершено', desc:'Здравствуйте, запишите…', own:''}
+];
+function tblOBR(){
+  return '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Номер</th><th>Создано</th><th>Тема</th><th>Статус</th><th>Описание</th><th>Владелец</th>'+
+    '</tr></thead><tbody>'+
+    OBR.map((r,i)=>'<tr>'+
+      '<td>'+(r.det
+        ? '<button class="rownum" onclick="openAppt()">'+r.n+'</button>'
+        : '<span class="num">'+r.n+'</span>')+'</td>'+
+      '<td class="dt">'+r.c+'<i>'+r.ct+'</i></td>'+
+      '<td>'+r.tema+'</td>'+
+      '<td><span class="st ok">'+r.st+'</span></td>'+
+      '<td>'+(r.full ? '<span class="desc-tt" onmouseenter="ttShow(event,\''+r.full.replace(/'/g,"\\'")+'\')" onmousemove="ttMove(event)" onmouseleave="ttHide()">'+r.desc+'</span>' : (r.desc || dash()))+'</td>'+
+      '<td>'+(r.own || dash())+'</td>'+
+    '</tr>').join('')+'</tbody></table></div>'+
+    '<div class="demo-note" style="padding:16px 0 0;border-top:none">'+
+    '<svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>'+
+    '<span>Наведите курсор на описание со подчёркиванием — появится полный текст обращения. Номер обращения № 9401052 кликабелен.</span></div>';
+}
+
+/* --- Записи --- */
+const ZP3 = [
+  {n:'2607290028', c:'15.07.2026', ct:'08:12', clinic:CL1, svc:'Стоматолог-хирург', ag:'', agt:'', st:['no','Запись отменена'], own:''},
+  {n:'2607142207', c:'03.07.2026', ct:'12:41', clinic:'', svc:'Стоматолог-терапевт', ag:'', agt:'', st:['mut','Пациент отказался'], own:'a.orlova', det:1},
+  {n:'2607141935', c:'01.07.2026', ct:'07:38', clinic:CL1, svc:'Стоматолог-терапевт', ag:'03.07.2026', agt:'10:10', st:['ok','Запись подтверждена'], own:''},
+  {n:'2606280931', c:'28.06.2026', ct:'11:16', clinic:VIRT, svc:'Гастроэнтеролог', ag:'02.07.2026', agt:'19:00', st:['ok','Запись подтверждена'], own:''},
+  {n:'2606201526', c:'20.06.2026', ct:'21:03', clinic:'', svc:'', ag:'21.05.2026', agt:'12:00', st:null, own:''},
+  {n:'2605180940', c:'18.05.2026', ct:'09:24', clinic:CL2, svc:'Невролог', ag:'18.05.2026', agt:'18:40', st:['ok','Запись подтверждена'], own:''}
+];
+function tblZP3(){
+  return '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Номер</th><th>Создан</th><th>Клиника</th><th>Услуга</th>'+
+    '<th>Согл. дата и время</th><th>Статус</th><th>Владелец</th>'+
+    '</tr></thead><tbody>'+
+    ZP3.map(r=>'<tr>'+
+      '<td>'+(r.det ? '<button class="rownum" onclick="openAppt()">'+r.n+'</button>' : '<span class="num">'+r.n+'</span>')+'</td>'+
+      '<td class="dt">'+r.c+'<i>'+r.ct+'</i></td>'+
+      '<td>'+(r.clinic || dash())+'</td>'+
+      '<td>'+(r.svc || dash())+'</td>'+
+      '<td class="dt">'+(r.ag ? r.ag+'<i>'+r.agt+'</i>' : dash())+'</td>'+
+      '<td>'+(r.st ? '<span class="st '+r.st[0]+'">'+r.st[1]+'</span>' : dash())+'</td>'+
+      '<td>'+(r.own || dash())+'</td>'+
+    '</tr>').join('')+'</tbody></table></div>';
+}
+
+/* --- Гарантийные письма --- */
+const GP3 = [
+  {n:'187204/26', st:['ok','Доставлено'], date:'04.06.2026', time:'19:05',
+   to:'spiski-garmoniya@example.com', clinic:CL1, resp:'a.orlova', creator:'a.orlova',
+   s:['Комплексная профессиональная гигиена (включая покрытие фторлаком, ультразвуковую чистку, Air-Flow)']}
+];
+function tblGP3(){
+  return '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Номер</th><th>Статус</th><th>Дата отправки</th><th>Получатель</th>'+
+    '<th>Клиника</th><th>Услуги</th><th>Ответственный</th><th>Создатель</th></tr></thead><tbody>'+
+    GP3.map(r=>'<tr>'+
+      '<td class="num">'+r.n+'</td>'+
+      '<td><span class="st '+r.st[0]+'">'+r.st[1]+'</span></td>'+
+      '<td class="dt">'+r.date+'<i>'+r.time+'</i></td>'+
+      '<td>'+r.to+'</td>'+
+      '<td>'+r.clinic+'</td>'+
+      '<td>'+svcList(r.s)+'</td>'+
+      '<td>'+r.resp+'</td>'+
+      '<td>'+r.creator+'</td>'+
+    '</tr>').join('')+'</tbody></table></div>'+
+    '<div class="demo-note" style="padding:16px 0 0;border-top:none">'+
+    '<svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>'+
+    '<span>Гигиена согласована и письмо отправлено ещё 04.06.2026 — больше чем за месяц до обращения от 03.07.2026.</span></div>';
+}
+
+/* --- Согласования --- */
+const SV3 = [
+  {n:'2606100766', date:'04.06.2026', time:'18:00', clinic:CL1, creator:'a.orlova',
+   s:['Комплексная профессиональная гигиена (включая покрытие фторлаком, ультразвуковую чистку, Air-Flow)']},
+  {n:'2605180696', date:'18.05.2026', time:'18:42', clinic:CL2, creator:'m.volkova',
+   s:['УЗДГ (дуплексное исследование) брахиоцефальных артерий','Рентгенография шейного отдела позвоночника (РГ ШОП)']}
+];
+function tblSV3(){
+  return '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Номер</th><th>Дата</th><th>Клиника</th><th>Услуги</th><th>Создатель</th>'+
+    '</tr></thead><tbody>'+
+    SV3.map(r=>'<tr>'+
+      '<td class="num">'+r.n+'</td>'+
+      '<td class="dt">'+r.date+'<i>'+r.time+'</i></td>'+
+      '<td>'+r.clinic+'</td>'+
+      '<td>'+svcList(r.s)+'</td>'+
+      '<td>'+r.creator+'</td>'+
+    '</tr>').join('')+'</tbody></table></div>';
+}
+
+/* --- История изменений (аудит) --- */
+const AUD = [
+  {t:'04.07.2026', tt:'02:35', field:'статус', type:'Обновление', old:'Ожидается ответ', neu:'Завершено', extra:'', who:'admin@bestdoctor.ru'},
+  {t:'04.07.2026', tt:'02:35', field:'appeal_survey_triggers', type:'Обновление', old:'', neu:'', extra:'«Триггер опроса «Обращение» #9401052»', who:'admin@bestdoctor.ru'},
+  {t:'03.07.2026', tt:'13:22', field:'заметка', type:'Обновление',
+    old:'Есть острая боль, просьба перезвонить. Районы — метро Юго-Западная, Проспект Вернадского.',
+    neu:'вижу соглас чистку, скрипты', extra:'', who:'a.orlova', hl:1},
+  {t:'03.07.2026', tt:'13:22', field:'активный conversation', type:'Обновление', old:'', neu:'Полина В. Закрыто', extra:'', who:'webhook@chat2desk.ru'},
+  {t:'03.07.2026', tt:'13:05', field:'владелец', type:'Обновление', old:'', neu:'a.orlova', extra:'', who:'—'},
+  {t:'03.07.2026', tt:'13:10', field:'назначенная группа', type:'Обновление', old:'Операторы — Первая линия', neu:'Операторы — Запись по скрипту', extra:'', who:'a.orlova', hl:1},
+  {t:'03.07.2026', tt:'13:10', field:'статус', type:'Обновление', old:'В работе', neu:'Ожидается ответ', extra:'', who:'a.orlova', hl:1},
+  {t:'03.07.2026', tt:'12:41', field:'записи', type:'Обновление', old:'', neu:'«Запись от Полина В. на приём — в None»', extra:'', who:'a.orlova'},
+  {t:'03.07.2026', tt:'12:40', field:'заметка', type:'Создание', old:'', neu:'Есть острая боль, просьба перезвонить. Районы — метро Юго-Западная, Проспект Вернадского.', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'источник обращения', type:'Создание', old:'', neu:'Звонок', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'транспорт', type:'Создание', old:'', neu:'Другое', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'статус', type:'Создание', old:'', neu:'В работе', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'назначенная группа', type:'Создание', old:'', neu:'Операторы — Первая линия', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'тема', type:'Создание', old:'', neu:'Создать запись', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'город обращения', type:'Обновление', old:'', neu:'Москва', extra:'', who:'p.marchenko'},
+  {t:'03.07.2026', tt:'12:40', field:'ID', type:'Создание', old:'', neu:'9401052', extra:'', who:'p.marchenko'}
+];
+function tblAUD(){
+  return '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Время изменения</th><th>Поле</th><th>Тип изменения</th><th>Старое значение</th>'+
+    '<th>Новое значение</th><th>Добавленные / убавленные</th><th>Кто изменил</th></tr></thead><tbody>'+
+    AUD.map(r=>'<tr'+(r.hl?' style="background:rgba(255,115,119,.06)"':'')+'>'+
+      '<td class="dt">'+r.t+'<i>'+r.tt+'</i></td>'+
+      '<td>'+r.field+'</td>'+
+      '<td>'+r.type+'</td>'+
+      '<td>'+(r.old ? '<span class="old-val">'+r.old+'</span>' : dash())+'</td>'+
+      '<td>'+(r.neu ? '<span class="new-val">'+r.neu+'</span>' : dash())+'</td>'+
+      '<td>'+(r.extra || dash())+'</td>'+
+      '<td>'+r.who+'</td>'+
+    '</tr>').join('')+'</tbody></table></div>'+
+    '<div class="demo-note" style="padding:16px 0 0;border-top:none">'+
+    '<svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>'+
+    '<span>Полная история хранит каждое изменение поля обращения — включая правки заметки оператора и смены статуса.</span></div>';
+}
+
+function emptyState(title,text){
+  return '<div class="empty"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></span>'+
+    '<h4>'+title+'</h4><p>'+text+'</p></div>';
+}
+
+const p3 = document.querySelectorAll('#tabs-3a .tabpane');
+p3[0].innerHTML = tblOBR();
+p3[1].innerHTML = tblZP3();
+p3[2].innerHTML = tblGP3();
+p3[3].innerHTML = tblSV3();
+p3[4].innerHTML = tblAUD();
+p3[5].innerHTML = emptyState('Комментариев нет','К этому обращению пока не добавлено ни одного комментария.');
+p3[6].innerHTML = emptyState('Телемед-консультаций нет','По этому обращению телемедицинские консультации не проводились.');
+
+/* --- Подсказка с полным текстом обращения --- */
+function ttShow(e, text){
+  const box = document.getElementById('ttBox');
+  box.textContent = text;
+  box.classList.add('is-show');
+  ttMove(e);
+}
+function ttMove(e){
+  const box = document.getElementById('ttBox');
+  const pad = 16, w = 320;
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if(x + w + pad > window.innerWidth) x = e.clientX - w - 14;
+  if(y + 120 > window.innerHeight) y = e.clientY - 120;
+  box.style.left = x+'px'; box.style.top = y+'px';
+}
+function ttHide(){ document.getElementById('ttBox').classList.remove('is-show'); }
+
+/* =========================================================
+   5. НАВИГАЦИЯ
+   ========================================================= */
+const CASE_TITLES = { 3:'Обращение · Полина' };
+
+function openCase(n){
+  document.getElementById('screen-menu').hidden = true;
+  document.getElementById('screen-case').hidden = false;
+  document.getElementById('case-3').hidden = false;
+  document.body.dataset.screen = 'case';
+  document.getElementById('crumb').textContent = CASE_TITLES[n];
+  window.scrollTo(0,0);
+  resetChat('chat3','hint3');
+}
+function goMenu(){
+  document.getElementById('screen-case').hidden = true;
+  document.getElementById('screen-menu').hidden = false;
+  document.body.dataset.screen = 'menu';
+  document.getElementById('crumb').textContent = 'Разбор обращения';
+  window.scrollTo(0,0);
+}
+function resetChat(scrollId, hintId){
+  const s = document.getElementById(scrollId);
+  const h = document.getElementById(hintId);
+  requestAnimationFrame(()=>{
+    s.scrollTop = s.scrollHeight;
+    h.classList.toggle('is-hidden', s.scrollHeight - s.clientHeight < 20);
+  });
+}
+[['chat3','hint3']].forEach(([sid,hid])=>{
+  const el = document.getElementById(sid);
+  el.addEventListener('scroll', ()=>{
+    if(el.scrollHeight - el.scrollTop - el.clientHeight > 40)
+      document.getElementById(hid).classList.add('is-hidden');
+  },{passive:true});
+});
+
+function showPane(caseNo, id, btn){
+  document.querySelectorAll('#case-'+caseNo+' .pane').forEach(p=>p.hidden = (p.id !== id));
+  document.querySelectorAll('#case-'+caseNo+' .crmtab').forEach(t=>t.classList.toggle('is-active', t===btn));
+}
+function showTab(scope, i, btn){
+  document.querySelectorAll('#tabs-'+scope+' .tabpane').forEach((p,idx)=>p.hidden = idx !== i);
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('is-active', b===btn));
+}
+
+/* =========================================================
+   6. МОДАЛКА ОБРАЩЕНИЯ (Создание записи)
+   ========================================================= */
+function apptCard(){
+  const p = PEOPLE.polina;
+  return ''+
+  '<div class="fieldgrid">'+
+    '<div><div class="k">Дата создания</div><div class="v">03.07.2026 12:40</div></div>'+
+    '<div><div class="k">Создатель</div><div class="v">p.marchenko</div></div>'+
+    '<div><div class="k">Ответственный</div><div class="v">a.orlova</div></div>'+
+    '<div><div class="k">Тип</div><div class="v">Создать запись</div></div>'+
+    '<div><div class="k">Статус</div><div class="v">Завершено</div></div>'+
+  '</div>'+
+  '<div class="hr"></div>'+
+  '<div class="apptgrid">'+
+    '<div><div class="l">Обратившийся пациент</div><div class="selfield">'+p.name+'<span class="chev">⌄</span></div></div>'+
+    '<div><div class="l">Пациент</div><div class="selfield">Записывается сам<span class="chev">⌄</span></div></div>'+
+  '</div>'+
+  '<div class="panel" style="margin-bottom:20px">'+ renderCard('polina') +'</div>'+
+  '<div class="subttl"><svg class="ray" viewBox="0 0 32 32" style="fill:currentColor;color:var(--coral)"><use href="#ray"/></svg>Заметка оператора</div>'+
+  '<div class="note-box">вижу соглас чистку, скрипты</div>'+
+  '<div class="subttl"><svg class="ray" viewBox="0 0 32 32" style="fill:currentColor;color:var(--coral)"><use href="#ray"/></svg>Создание записи</div>'+
+  '<div class="tbl-wrap"><table class="tbl"><thead><tr>'+
+    '<th>Номер</th><th>Клиника</th><th>Услуга или продукт</th><th>Дата</th><th>Способ связи</th><th>Статус</th>'+
+    '</tr></thead><tbody><tr>'+
+    '<td class="num">'+ZP3[1].n+'</td>'+
+    '<td>Желаемая: '+dash()+'<br>Выбранная: '+dash()+'</td>'+
+    '<td>Стоматолог-терапевт</td>'+
+    '<td>Желаемая: '+dash()+'<br>Согласованная: '+dash()+'</td>'+
+    '<td>Звонок</td>'+
+    '<td><span class="st mut">Пациент отказался</span></td>'+
+    '</tr></tbody></table></div>'+
+  '<div class="subttl"><svg class="ray" viewBox="0 0 32 32" style="fill:currentColor;color:var(--coral)"><use href="#ray"/></svg>Действия с обращением</div>'+
+  '<div class="commentbox">Комментарий не добавлен</div>'+
+  '<div class="footnote">'+
+    '<svg class="ray" viewBox="0 0 32 32" style="fill:currentColor"><use href="#ray"/></svg>'+
+    '<span>Демонстрационные данные. Персональные сведения вымышленные, обращение показано в учебных целях.</span></div>';
+}
+function openAppt(){
+  document.getElementById('apptBody').innerHTML = apptCard();
+  document.getElementById('apptOverlay').classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAppt(){
+  document.getElementById('apptOverlay').classList.remove('is-open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('apptOverlay').classList.contains('is-open')) return closeAppt();
+});
+</script>
+</body>
+</html>
